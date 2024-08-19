@@ -73,7 +73,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
         if message.lower().startswith("!"):
-            response = self.chatbot.get_response(message[1:].strip())
+            response = self.chatbot.get_response(message[1:].strip(), self.room_name)
             await sync_to_async(Message.objects.create)(user=self.bot_user, room_name=self.room_name, content=response)
             await self.channel_layer.group_send(
                 self.room_group_name, 
