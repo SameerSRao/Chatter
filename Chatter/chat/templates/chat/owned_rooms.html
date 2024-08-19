@@ -1,20 +1,27 @@
-<!-- chat/templates/chat/owned_rooms.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Owned Chat Rooms</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>Your Owned Chat Rooms</h2>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h2 class="text-center">Your Owned Chat Rooms</h2>
 
-    {% if owned_rooms %}
-        <ul>
-            {% for room in owned_rooms %}
-                <li><a href="{% url 'room' room.name %}">{{ room.name }}</a></li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>You do not own any chat rooms.</p>
-    {% endif %}
+        {% if owned_rooms %}
+            <ul class="list-group">
+                {% for room in owned_rooms %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{% url 'room' room.name %}">{{ room.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center mt-3">You do not own any chat rooms.</p>
+        {% endif %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

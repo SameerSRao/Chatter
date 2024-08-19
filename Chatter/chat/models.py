@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 class ChatRoom(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     members = models.ManyToManyField(User, related_name='chat_rooms')
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_rooms')
 

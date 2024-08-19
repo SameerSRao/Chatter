@@ -1,51 +1,96 @@
-<!-- chat/templates/chat/room.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Room</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chat-message {
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+        }
+        .message-user {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: white;
+            border-radius: 15px 15px 0 15px;
+            padding: 10px;
+        }
+        .message-other {
+            align-self: flex-start;
+            background-color: #f1f1f1;
+            color: black;
+            border-radius: 15px 15px 15px 0;
+            padding: 10px;
+        }
+    </style>
 </head>
-<body>
-    <h2>Chat Room: {{ room_name }}</h2>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Chat Room: {{ room_name }}</h2>
+            <a href="{% url 'index' %}" class="btn btn-outline-secondary">Home</a>
+        </div>
+        <div class="card">
+            <div class="card-body" id="chat-container" style="height: 400px; overflow-y: auto;">
+                <div id="chat-log" class="mb-3 d-flex flex-column"></div>
+            </div>
+            <div class="input-group">
+                <input id="chat-message-input" type="text" class="form-control" placeholder="Type your message..." autocomplete="off">
+                <button id="chat-message-submit" class="btn btn-primary" type="button">Send</button>
+            </div>
+        </div>
+    </div>
 
-    <button type="button">
-        <a href="{% url 'index' %}">Home</a>
-    </button>
-    <br>
-    <textarea id="chat-log" cols="100" rows="20" readonly></textarea><br>
-    <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
-
         const chatSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/chat/'
-            + roomName
-            + '/'
+            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
         );
 
-        // Load chat history from the server when the page is loaded
+        function scrollToBottom() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
         window.onload = function() {
             fetch('/chat/history/' + roomName + '/')
                 .then(response => response.json())
                 .then(data => {
                     const chatLog = document.querySelector('#chat-log');
-                    chatLog.value = '';  // Clear existing log
+                    chatLog.innerHTML = '';
                     data.messages.forEach(message => {
-                        chatLog.value += `${message.user}: ${message.content}\n`;
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('chat-message');
+                        if (message.user === "{{ request.user.username }}") {
+                            messageElement.classList.add('message-user');
+                        } else {
+                            messageElement.classList.add('message-other');
+                        }
+                        messageElement.textContent = `${message.user}: ${message.content}`;
+                        chatLog.appendChild(messageElement);
                     });
-                    chatLog.scrollTop = chatLog.scrollHeight;  // Auto-scroll to the latest message
+                    scrollToBottom();  // Automatically scroll to the latest message
                 });
         };
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             const chatLog = document.querySelector('#chat-log');
-            chatLog.value += `${data.user}: ${data.message}\n`;
-            chatLog.scrollTop = chatLog.scrollHeight;   
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message');
+            if (data.user === "{{ request.user.username }}") {
+                messageElement.classList.add('message-user');
+            } else {
+                messageElement.classList.add('message-other');
+            }
+            messageElement.textContent = `${data.user}: ${data.message}`;
+            chatLog.appendChild(messageElement);
+            scrollToBottom();  // Automatically scroll to the latest message
         };
 
         chatSocket.onclose = function(e) {
@@ -54,7 +99,7 @@
 
         document.querySelector('#chat-message-input').focus();
         document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
+            if (e.key === 'Enter') {
                 document.querySelector('#chat-message-submit').click();
             }
         };
@@ -67,7 +112,7 @@
             }));
             messageInputDom.value = '';
         };
-
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

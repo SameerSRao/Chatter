@@ -13,7 +13,7 @@ def index(request):
 
 @login_required
 def room(request, room_name):
-    chat_room, created = ChatRoom.objects.get_or_create(name=room_name, owner=request.user)
+    chat_room, created = ChatRoom.objects.get_or_create(name=room_name, defaults={'owner':request.user})
     chat_room.members.add(request.user)
     return render(request, 'chat/room.html', {"room_name":room_name})
 
@@ -54,16 +54,16 @@ def chat_history(request, room_name):
     return JsonResponse({"messages": message_list})
 
 def leave_room(request, room_name):
-    chat_room = get_object_or_404(ChatRoom, name=room_name)
+    chat_rooms = ChatRoom.objects.filter(name=room_name, members=request.user)
 
-    if not chat_room.id:
+    if not chat_rooms.exists():
         raise ValueError(f"ChatRoom with name '{room_name}' does not exist.")
-
-    chat_room.members.remove(request.user) 
-
-    if request.user == chat_room.owner or chat_room.members.count() == 0:
-        chat_room.delete()
-        Message.objects.filter(room_name=room_name).delete()
+    
+    for chat_room in chat_rooms:
+        chat_room.members.remove(request.user) 
+        if request.user == chat_room.owner or chat_room.members.count() == 0:
+            chat_room.delete()
+            Message.objects.filter(room_name=room_name).delete()
 
     return redirect('index')
 
