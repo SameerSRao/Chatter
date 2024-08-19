@@ -57,27 +57,6 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        window.onload = function() {
-            fetch('/chat/history/' + roomName + '/')
-                .then(response => response.json())
-                .then(data => {
-                    const chatLog = document.querySelector('#chat-log');
-                    chatLog.innerHTML = '';
-                    data.messages.forEach(message => {
-                        const messageElement = document.createElement('div');
-                        messageElement.classList.add('chat-message');
-                        if (message.user === "{{ request.user.username }}") {
-                            messageElement.classList.add('message-user');
-                        } else {
-                            messageElement.classList.add('message-other');
-                        }
-                        messageElement.textContent = `${message.user}: ${message.content}`;
-                        chatLog.appendChild(messageElement);
-                    });
-                    scrollToBottom();  // Automatically scroll to the latest message
-                });
-        };
-
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             const chatLog = document.querySelector('#chat-log');

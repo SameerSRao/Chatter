@@ -4,6 +4,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
 from .models import Message, ChatRoom
+from django.contrib.auth.models import User
 
 def index(request):
     chat_rooms = []
@@ -14,7 +15,26 @@ def index(request):
 @login_required
 def room(request, room_name):
     chat_room, created = ChatRoom.objects.get_or_create(name=room_name, defaults={'owner':request.user})
-    chat_room.members.add(request.user)
+
+    if created:
+        # If the room is created, send a welcome message from the bot
+        bot_user = User.objects.get(username="ChatterBot")
+        Message.objects.create(
+            user=bot_user,
+            room_name=room_name,
+            content="Welcome to the chat room! Prefix messages with '!' to interact with me."
+        )
+
+    if not chat_room.members.contains(request.user):
+        chat_room.members.add(request.user)
+        bot_user = User.objects.get(username="ChatterBot")
+        Message.objects.create(
+            user=bot_user,
+            room_name=room_name,
+            content=f"{request.user} just joined!"
+        )
+
+
     return render(request, 'chat/room.html', {"room_name":room_name})
 
 def login_view(request):
