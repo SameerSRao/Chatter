@@ -3,8 +3,9 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
-from .models import Message, ChatRoom
+from .models import Message, ChatRoom, ChatRoomMembership
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 def index(request):
     chat_rooms = []
@@ -12,30 +13,42 @@ def index(request):
         chat_rooms = request.user.chat_rooms.all()
     return render(request, "chat/index.html", {'chat_rooms': chat_rooms})
 
+
 @login_required
 def room(request, room_name):
+    # get or create chat room
     chat_room, created = ChatRoom.objects.get_or_create(name=room_name, defaults={'owner':request.user})
 
+    bot_user = User.objects.get(username="ChatterBot")
+
+    # If the room is created, send a welcome message from the bot
     if created:
-        # If the room is created, send a welcome message from the bot
-        bot_user = User.objects.get(username="ChatterBot")
         Message.objects.create(
             user=bot_user,
             room_name=room_name,
             content="Welcome to the chat room! Prefix messages with '!' to interact with me."
         )
 
-    if not chat_room.members.contains(request.user):
+    membership, _ = ChatRoomMembership.objects.get_or_create(user=request.user, chat_room=chat_room)
+    missed_messages = Message.objects.filter(room_name=room_name, timestamp__gt=membership.last_accessed)
+    recap_summary = None
+    if missed_messages.count() >= 10:
+        recap_summary = f"You missed {missed_messages.count()} messages since your last visit."
+
+    if not chat_room.members.filter(id=request.user.id).exists():
         chat_room.members.add(request.user)
-        bot_user = User.objects.get(username="ChatterBot")
+
         Message.objects.create(
             user=bot_user,
             room_name=room_name,
             content=f"{request.user} just joined!"
         )
 
+    return render(request, 'chat/room.html', {
+        "room_name":room_name, 
+        "recap_summary":recap_summary
+    })
 
-    return render(request, 'chat/room.html', {"room_name":room_name})
 
 def login_view(request):
     if request.method == 'POST':
@@ -53,9 +66,11 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'registration/login.html', {'form':form})
 
+
 def logout_view(request):
     logout(request)
     return redirect('login')
+
 
 def register(request):
     if request.method == 'POST':
@@ -68,10 +83,12 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form':form})
 
+
 def chat_history(request, room_name):
     messages = Message.objects.filter(room_name=room_name).order_by('timestamp')
     message_list = [{"user": msg.user.username, "content": msg.content} for msg in messages]
     return JsonResponse({"messages": message_list})
+
 
 def leave_room(request, room_name):
     chat_rooms = ChatRoom.objects.filter(name=room_name, members=request.user)
@@ -86,6 +103,7 @@ def leave_room(request, room_name):
             Message.objects.filter(room_name=room_name).delete()
 
     return redirect('index')
+
 
 def owned_rooms_view(request):
     if request.user.is_authenticated:

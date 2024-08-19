@@ -3,9 +3,10 @@ import json
 
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .models import Message
+from .models import Message, ChatRoomMembership, ChatRoom
 from .chatbot import SimpleChatBot
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -29,16 +30,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         self.chatbot = SimpleChatBot()
         self.bot_user = await sync_to_async(User.objects.get)(username="ChatterBot")
+        await self.update_last_accessed_time()
     
+
     @sync_to_async
     def get_chat_history(self):
         return list(Message.objects.filter(room_name=self.room_name).order_by('timestamp').values('user__username','content','timestamp'))
 
+
+    @sync_to_async
+    def update_last_accessed_time(self):
+        # Update the last accessed time for the user in this room
+        chat_room = ChatRoom.objects.get(name=self.room_name)
+        membership, created = ChatRoomMembership.objects.get_or_create(user=self.scope['user'], chat_room=chat_room)
+        membership.last_accessed = timezone.now()
+        membership.save()
+
+
     async def disconnect(self, close_code):
+        await self.update_last_accessed_time()
         await self.channel_layer.group_discard(
             self.room_group_name, 
             self.channel_name
         )
+
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -68,6 +83,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "user": self.bot_user.username
                 }
             )
+
 
     async def chat_message(self, event):
         message = event["message"]

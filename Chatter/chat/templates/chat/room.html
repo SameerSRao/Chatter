@@ -45,52 +45,78 @@
         </div>
     </div>
 
+    <div class="modal fade" id="recapModal" tabindex="-1" aria-labelledby="recapModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="recapModalLabel">Recap Summary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{ recap_summary }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{ room_name|json_script:"room-name" }}
     <script>
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
-        const chatSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
-        );
+        document.addEventListener("DOMContentLoaded", function() {
+            const roomName = JSON.parse(document.getElementById('room-name').textContent);
+            const chatSocket = new WebSocket(
+                'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+            );
 
-        function scrollToBottom() {
-            const chatContainer = document.getElementById('chat-container');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const chatLog = document.querySelector('#chat-log');
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('chat-message');
-            if (data.user === "{{ request.user.username }}") {
-                messageElement.classList.add('message-user');
-            } else {
-                messageElement.classList.add('message-other');
+            function scrollToBottom() {
+                const chatContainer = document.getElementById('chat-container');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
-            messageElement.textContent = `${data.user}: ${data.message}`;
-            chatLog.appendChild(messageElement);
-            scrollToBottom();  // Automatically scroll to the latest message
-        };
 
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
-        };
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                const chatLog = document.querySelector('#chat-log');
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message');
+                if (data.user === "{{ request.user.username }}") {
+                    messageElement.classList.add('message-user');
+                } else {
+                    messageElement.classList.add('message-other');
+                }
+                messageElement.textContent = `${data.user}: ${data.message}`;
+                chatLog.appendChild(messageElement);
+                scrollToBottom();  // Automatically scroll to the latest message
+            };
 
-        document.querySelector('#chat-message-input').focus();
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {
-                document.querySelector('#chat-message-submit').click();
-            }
-        };
+            chatSocket.onclose = function(e) {
+                console.error('Chat socket closed unexpectedly');
+            };
 
-        document.querySelector('#chat-message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
-            messageInputDom.value = '';
-        };
+            document.querySelector('#chat-message-input').focus();
+            document.querySelector('#chat-message-input').onkeyup = function(e) {
+                if (e.key === 'Enter') {
+                    document.querySelector('#chat-message-submit').click();
+                }
+            };
+
+            document.querySelector('#chat-message-submit').onclick = function(e) {
+                const messageInputDom = document.querySelector('#chat-message-input');
+                const message = messageInputDom.value;
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+                messageInputDom.value = '';
+            };
+            {% if recap_summary %}
+            console.log("Recap summary:", "{{ recap_summary }}");
+            var recapModal = new bootstrap.Modal(document.getElementById('recapModal'));
+            recapModal.show();
+            {% else %}
+            console.log("No recap summary available.");
+            {% endif %}
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

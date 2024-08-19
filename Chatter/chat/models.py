@@ -10,6 +10,11 @@ class ChatRoom(models.Model):
     def __str__(self):
         return self.name
 
+class ChatRoomMembership(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
+    last_accessed = models.DateTimeField(auto_now=True)
+
 class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room_name = models.CharField(max_length=255)
