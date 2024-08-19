@@ -31,10 +31,10 @@
 
 ## Dependencies
 
-Python 3.8+
-Django 3.0+
-Django Channels
-Redis (for channel layer)
+* Python 3.8+
+* Django 3.0+
+* Django Channels
+* Redis (for channel layer)
 
 ## Installing
 1. Clone the repository:
