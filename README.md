@@ -1,4 +1,4 @@
-# Chatter - A Django-Based Real-Time Chat Application with AI Chatbot Integration
+# Chatter
 
 ## Description
 
