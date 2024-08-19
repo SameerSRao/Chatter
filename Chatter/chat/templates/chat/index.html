@@ -1,0 +1,55 @@
+<!-- chat/templates/chat/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Rooms</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <p>Welcome, {{ user.username }}! <a href="{% url 'logout' %}">Logout</a></p>
+    {% else %}
+        <p>You are not logged in. <a href="{% url 'login' %}">Login</a> or <a href="{% url 'register' %}">Register</a></p>
+    {% endif %}
+
+    <h4>Your Chat Rooms:</h4>
+    <ul>
+        {% for room in chat_rooms %}
+            <li><a href="{% url 'room' room.name %}">{{ room.name }}</a></li>
+            <form action="{%url 'leave_room' room.name%}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit">Leave</button>
+            </form>
+        {% endfor %}
+    </ul>
+
+    <h4>Public Rooms:</h4>
+    <ul>
+        <li><a href="chat/lobby">lobby</a></li>
+    </ul>
+
+    <h4>Join a Room:</h4>
+    <input id="room-name-input" type="text" size="100"><br>
+    <input id="room-name-submit" type="button" value="Enter">
+    <!-- <form action="{}" method="post">
+        {% csrf_token %}
+        <label for="room-name-input">Room Name:</label>
+        <input id="room-name-input" type="text" name="room_name" required><br>
+        <button type="submit">Enter</button>
+    </form> -->
+
+    <script>
+        document.querySelector('#room-name-input').focus();
+        document.querySelector('#room-name-input').onkeyup = function(e) {
+            if (e.key === 'Enter') {  // enter, return
+                document.querySelector('#room-name-submit').click();
+            }
+        };
+
+        document.querySelector('#room-name-submit').onclick = function(e) {
+            var roomName = document.querySelector('#room-name-input').value;
+            window.location.pathname = '/chat/' + roomName + '/';
+        };
+    </script>
+</body>
+</html>

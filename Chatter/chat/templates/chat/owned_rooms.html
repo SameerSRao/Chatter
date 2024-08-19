@@ -1,0 +1,20 @@
+<!-- chat/templates/chat/owned_rooms.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Owned Chat Rooms</title>
+</head>
+<body>
+    <h2>Your Owned Chat Rooms</h2>
+
+    {% if owned_rooms %}
+        <ul>
+            {% for room in owned_rooms %}
+                <li><a href="{% url 'room' room.name %}">{{ room.name }}</a></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You do not own any chat rooms.</p>
+    {% endif %}
+</body>
+</html>
