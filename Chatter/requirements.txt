@@ -15,6 +15,7 @@ click==8.1.7
 cmake==3.30.2
 constantly==23.10.4
 cryptography==43.0.0
+Cython==0.29.37
 daphne==4.1.2
 distro==1.9.0
 dj-database-url==2.2.0
@@ -50,7 +51,7 @@ pyOpenSSL==24.2.1
 PySocks==1.7.1
 python-dateutil==2.7.5
 pytz==2024.1
-PyYAML==3.13
+PyYAML==6.0
 redis==5.0.8
 regex==2024.7.24
 selenium==4.23.1
