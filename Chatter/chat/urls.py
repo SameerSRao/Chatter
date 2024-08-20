@@ -12,4 +12,5 @@ urlpatterns = [
     path("chat/<str:room_name>/", views.room, name="room"),
     path('chat/<str:room_name>/leave/', views.leave_room, name='leave_room'),
     path('owned-rooms/', views.owned_rooms_view, name='owned_rooms'),
+    path('chat/<str:room_name>/recap/<int:count>/', views.get_recap_summary, name='get_recap_summary'),
 ]

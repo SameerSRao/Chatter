@@ -45,7 +45,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="recapModal" tabindex="-1" aria-labelledby="recapModalLabel" aria-hidden="true">
+    <div class="modal fade" id="recapModal" tabindex="-1" aria-labelledby="recapModalLabel" aria-hidden="true" data-missed-messages="{{ count }}">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -56,7 +56,8 @@
                     {{ recap_summary }}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="get-recap-button">Get Recap</button>
+                    <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -66,6 +67,9 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const roomName = JSON.parse(document.getElementById('room-name').textContent);
+            const missed = document.getElementById('recapModal').getAttribute('data-missed-messages');
+            console.log(missed)
+
             const chatSocket = new WebSocket(
                 'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
             );
@@ -109,6 +113,19 @@
                 }));
                 messageInputDom.value = '';
             };
+
+            document.getElementById('get-recap-button').onclick = function() {
+                fetch(`/chat/${roomName}/recap/${missed}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.recap_summary) {
+                            console.log("Recap summary:", data.recap_summary);
+                            document.querySelector('.modal-body').textContent = data.recap_summary;
+                        }
+                    })
+                    .catch(error => console.error('Error fetching recap:', error));
+            };
+
             {% if recap_summary %}
             console.log("Recap summary:", "{{ recap_summary }}");
             var recapModal = new bootstrap.Modal(document.getElementById('recapModal'));

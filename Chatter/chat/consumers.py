@@ -4,9 +4,10 @@ import json
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .models import Message, ChatRoomMembership, ChatRoom
-from .chatbot import SimpleChatBot
+from .chatbot import GPTChatBot
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.conf import settings
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -28,8 +29,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'timestamp': message['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
             }))
         
-        self.chatbot = SimpleChatBot()
-        self.bot_user = await sync_to_async(User.objects.get)(username="ChatterBot")
+        # self.chatbot = SimpleChatBot()
+        self.chatbot = GPTChatBot(api_key=settings.OPENAI_API_KEY)
+        self.bot_user = await sync_to_async(User.objects.get)(username="ChatterBox")
         await self.update_last_accessed_time()
     
 
@@ -73,7 +75,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
         if message.lower().startswith("!"):
-            response = self.chatbot.get_response(message[1:].strip(), self.room_name)
+            response = await sync_to_async(self.chatbot.get_response)(message[1:].strip(), self.room_name)
             await sync_to_async(Message.objects.create)(user=self.bot_user, room_name=self.room_name, content=response)
             await self.channel_layer.group_send(
                 self.room_group_name, 
@@ -83,7 +85,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "user": self.bot_user.username
                 }
             )
-
+        
 
     async def chat_message(self, event):
         message = event["message"]

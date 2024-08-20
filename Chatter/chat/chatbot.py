@@ -1,18 +1,13 @@
 # chat/chatbot.py
 from .hangman import HangmanGame
+from openai import OpenAI
 
-class SimpleChatBot:
-    def __init__(self):
-        # You can define more sophisticated rules here
-        self.responses = {
-            "hello": "Hi there! How can I assist you today?",
-            "how are you": "I'm just a bot, but I'm here to help you!",
-            "what is your name": "I am your friendly chat assistant.",
-            "help": "You can ask me anything about the chat application.",
-        }
+class GPTChatBot:
+    def __init__(self, api_key):
+        self.client = OpenAI(api_key=api_key)
         self.games = {}
     
-    def get_response(self, message, room_name=None):
+    def get_response(self, message, room_name):
         if message == "hangman":
             if room_name not in self.games:
                 self.games[room_name] = HangmanGame()
@@ -34,8 +29,17 @@ class SimpleChatBot:
             else:
                 return "No Hangman game in progress. Start a game with `!hangman`."
 
-        message = message.lower()
-        for key in self.responses:
-            if key in message:
-                return self.responses[key]
-        return "I'm not sure how to respond to that. Try asking something else!"
+        try:
+            response = self.client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"respond to this message in less than 100 words: {message}",
+                    }
+                ],
+                model="gpt-4o-mini",
+                max_tokens=150,
+            )
+            return (response.choices[0].message.content)
+        except Exception as e:
+            return f"Sorry, I couldn't process your request: {str(e)}"

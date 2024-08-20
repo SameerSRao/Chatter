@@ -6,6 +6,10 @@ from django.http import HttpResponseRedirect, JsonResponse
 from .models import Message, ChatRoom, ChatRoomMembership
 from django.contrib.auth.models import User
 from django.utils import timezone
+from openai import OpenAI
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 def index(request):
     chat_rooms = []
@@ -19,7 +23,7 @@ def room(request, room_name):
     # get or create chat room
     chat_room, created = ChatRoom.objects.get_or_create(name=room_name, defaults={'owner':request.user})
 
-    bot_user = User.objects.get(username="ChatterBot")
+    bot_user = User.objects.get(username="ChatterBox")
 
     # If the room is created, send a welcome message from the bot
     if created:
@@ -30,10 +34,11 @@ def room(request, room_name):
         )
 
     membership, _ = ChatRoomMembership.objects.get_or_create(user=request.user, chat_room=chat_room)
-    missed_messages = Message.objects.filter(room_name=room_name, timestamp__gt=membership.last_accessed)
+    missed_messages = Message.objects.filter(room_name=room_name, timestamp__gt=membership.last_accessed)[:30]
+    count = missed_messages.count()
     recap_summary = None
-    if missed_messages.count() >= 10:
-        recap_summary = f"You missed {missed_messages.count()} messages since your last visit."
+    if count >= 5:
+        recap_summary = f"You missed {count}{'+' if count == 30 else ''} messages since your last visit:"
 
     if not chat_room.members.filter(id=request.user.id).exists():
         chat_room.members.add(request.user)
@@ -46,7 +51,8 @@ def room(request, room_name):
 
     return render(request, 'chat/room.html', {
         "room_name":room_name, 
-        "recap_summary":recap_summary
+        "recap_summary":recap_summary,
+        'count': count
     })
 
 
@@ -112,3 +118,28 @@ def owned_rooms_view(request):
         owned_rooms = []
 
     return render(request, 'chat/owned_rooms.html', {'owned_rooms': owned_rooms})
+
+
+@csrf_exempt
+def get_recap_summary(request, room_name, count):
+    if request.method == 'GET' and request.user.is_authenticated:
+        print(room_name, count)
+        missed_messages = Message.objects.filter(room_name=room_name).order_by('-timestamp')[:count]
+        missed_messages = reversed(missed_messages)
+
+        recap_text = "\n".join(f"{msg.user.username}: {msg.content}" for msg in missed_messages)
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"summarize these missed messages in less than 100 words: {recap_text}",
+                }
+            ],
+            model="gpt-4o-mini",
+            max_tokens=150,
+        )
+
+        recap_summary = response.choices[0].message.content
+        return JsonResponse({"recap_summary": recap_summary})
+    return JsonResponse({"error": "Invalid request"}, status=400)
