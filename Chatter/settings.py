@@ -35,7 +35,7 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS=['*']
+CSRF_TRUSTED_ORIGINS=['https://chatter-694ee4f055f8.herokuapp.com/']
 
 # Application definition
 
