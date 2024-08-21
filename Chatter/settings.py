@@ -35,7 +35,7 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
-
+CSRF_TRUSTED_ORIGINS=['*']
 
 # Application definition
 
