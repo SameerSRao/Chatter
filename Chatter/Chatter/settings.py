@@ -18,7 +18,7 @@ import dj_database_url
 import redis
 from urllib.parse import urlparse
 
-redis_url = urlparse(os.environ.get('REDIS_URL'))
+# redis_url = urlparse(os.environ.get('REDIS_URL'))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -151,8 +151,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(redis_url.hostname, redis_url.port)],
-            "password": redis_url.password,
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
         },
     },
 }
