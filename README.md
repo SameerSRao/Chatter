@@ -4,7 +4,17 @@
 
 **Chatter** is a real-time chat application built using Django, Django Channels, and WebSockets. The application supports multiple chat rooms, user authentication, and features a simple AI chatbot that interacts with users, providing assistance and entertainment. The AI chatbot includes a basic keyword-matching system and supports playing games like Hangman. Additionally, the application includes a recap feature that summarizes missed messages, ensuring users stay updated with ongoing conversations.
 
+
+## Screenshots
+
+<img width="500" alt="Screenshot 2024-08-21 at 3 51 42 PM" src="https://github.com/user-attachments/assets/c9b6e94c-cfd3-4c97-b80c-70b102cb88f5">
+
+<img width="500" alt="Screenshot 2024-08-21 at 3 51 04 PM" src="https://github.com/user-attachments/assets/cb43446d-131a-4df4-8b61-363b8623de4f">
+
+<img width="500" alt="Screenshot 2024-08-21 at 3 56 09 PM" src="https://github.com/user-attachments/assets/5d5a1860-6c68-453d-9f32-de3a84e045e4">
+
 ## Features
+
 1. **Real-Time Chat**
    * WebSockets: Leveraging Django Channels for real-time communication, enabling users to chat instantly in various chat rooms.
    * Multiple Chat Rooms: Users can create, join, and leave chat rooms. Each room is independent, and users can participate in multiple rooms.
@@ -12,9 +22,8 @@
    * User Authentication: Integrated user registration and login system using Django’s built-in authentication framework.
 
 3. **AI Chatbot**
-   * Keyword Matching: The chatbot responds to specific commands or keywords, providing pre-defined responses to user queries.
+   * AI Powered Chatbot: The application includes an OpenAI-powered chatbot, "ChatterBox," that users can interact with by prefixing messages with a designated command (e.g., !). The chatbot can respond to queries, provide summaries, and engage in simple conversational tasks.
    * Hangman Game: Users can play a game of Hangman by entering the !hangman command. The bot manages the game state, taking guesses and providing feedback.
-   * Custom Responses: The chatbot can be easily extended with new responses and commands.
 
 5. **Recap Feature**
    * Automatic Recap Summary: When users rejoin a chat room, they receive a recap of all the messages they missed since their last visit, helping them catch up on important discussions.
