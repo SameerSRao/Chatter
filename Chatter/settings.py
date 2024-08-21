@@ -32,9 +32,11 @@ SECRET_KEY = 'django-insecure-k7aohfz8kah!u2a*#t_--e1fj@dqzc=g^b6c_1y=mp8p_^#xqc
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS=['https://chatter-694ee4f055f8.herokuapp.com/']
 
 # Application definition
